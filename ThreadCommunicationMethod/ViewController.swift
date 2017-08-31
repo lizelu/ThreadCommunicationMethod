@@ -30,6 +30,8 @@ class ViewController: UIViewController, NSMachPortDelegate {
             guard let sendEventPort = self.handelEventMachPort else {
                 return
             }
+            Thread.current.name = "MySubThread"
+            print("Send Event Sub Thread: \(Thread.current)")
             
             //往主线程中的RunLoop中发送事件
             sendEventPort.send(before: Date(), msgid: 100, components:nil, from: nil, reserved: 0)
@@ -39,7 +41,7 @@ class ViewController: UIViewController, NSMachPortDelegate {
     //MARK: - NSMachPortDelegate
     //MachPort所触发的回调方法
     func handleMachMessage(_ msg: UnsafeMutableRawPointer) {
-        print("Handel Event Thread: \(Thread.current)")
+        print("Handel Event Thread: \(Thread.current)\n")
     }
     
     override func didReceiveMemoryWarning() {
