@@ -9,51 +9,42 @@
 import UIKit
 
 class ViewController: UIViewController, NSMachPortDelegate {
-    
-    var handelEventThread: Thread!
-    var handelEventMackPort: NSMachPort!
+
+    var handelEventMachPort: NSMachPort!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.configMacPortAndThread()
+        addMachPortToMainRunLoop()
     }
     
-    func configMacPortAndThread() {
-        self.handelEventMackPort = NSMachPort()
-        self.handelEventMackPort.setDelegate(self)
-    
-        self.handelEventThread = Thread.current
-        RunLoop.current.add(self.handelEventMackPort, forMode: .commonModes)
+    func addMachPortToMainRunLoop() {
+        //创建MachPort、并设置代理、然后将该MachPort添加到主线程中的RunLoop中
+        self.handelEventMachPort = NSMachPort()
+        self.handelEventMachPort.setDelegate(self)
+        RunLoop.current.add(self.handelEventMachPort, forMode: .commonModes)
     }
     
     @IBAction func tapOtherThreadSendEventButton(_ sender: Any) {
+        //开启一个子线程，子线程通过handelEventMackPort与主线程通信
         DispatchQueue.global().async {
-            guard let sendEventPort = self.handelEventMackPort else {
+            guard let sendEventPort = self.handelEventMachPort else {
                 return
             }
             
+            //往主线程中的RunLoop中发送事件
             sendEventPort.send(before: Date(), msgid: 100, components:nil, from: nil, reserved: 0)
         }
     }
     
-    func displayCurrentThread() {
-        print(Thread.current)
-    }
-    
     //MARK: - NSMachPortDelegate
+    //MachPort所触发的回调方法
     func handleMachMessage(_ msg: UnsafeMutableRawPointer) {
-        print(msg)
-       // let message: NSPortMessage = msg
-        
-        displayCurrentThread()
-        print("Handel Event")
+        print("Handel Event Thread: \(Thread.current)")
     }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
     
-
 }
 
